@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Activity, Zap } from "lucide-react"
-import { BitcoinPriceTicker } from "./bitcoin-price-ticker"
+import { BitcoinPriceCard } from "./bitcoin-price-card"
 import { useBitcoinPrice } from "@/hooks/use-bitcoin-price"
 
 interface Metric {
@@ -81,7 +81,7 @@ export function EnhancedRealTimeMetrics() {
   return (
     <div className="space-y-6">
       {/* Bitcoin Price Ticker - Full Width */}
-      <BitcoinPriceTicker />
+      <BitcoinPriceCard />
 
       {/* Other Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
