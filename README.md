@@ -1,30 +1,45 @@
-# Project Doomsday
-
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/kellyadamtan-7702s-projects/v0-project-doomsday)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/KQ2hTe9lctE)
-
 ## Overview
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+ChainSignal is SaaS platform designed to democratize institutional-grade insights with a unique user-centric approach.
 
-## Deployment
+## ChainSignal’s Differentiation Strategy
 
-Your project is live at:
+A. Core Innovations
 
-**[https://vercel.com/kellyadamtan-7702s-projects/v0-project-doomsday](https://vercel.com/kellyadamtan-7702s-projects/v0-project-doomsday)**
+Predictive Behavior Engine 
 
-## Build your app
+Uses AI to flag emerging trends (e.g., whale accumulation, miner capitulation) 12–48 hours before market shifts, similar to Merkle Science’s threat detection.
+Integrates metrics like Miner Profit/Loss and Exchange Reserve Alerts.
 
-Continue building your app on:
+Contextual Intelligence Layer
 
-**[https://v0.dev/chat/projects/KQ2hTe9lctE](https://v0.dev/chat/projects/KQ2hTe9lctE)**
+Overlays on-chain data with real-world events (e.g., ETF flows, regulatory news).
+Visualizes correlations (e.g., "Fed rate hikes → BTC outflows").
 
-## How It Works
+Workflow Automation
+No-code alert builders (e.g., "Notify me if >1,000 BTC moves to exchanges").
+Zapier-style integrations with exchanges/TradingView 10.
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+B. User Experience Edge
+
+Adaptive Dashboards: Beginners see pre-built templates (e.g., "Bull Market Signals"); pros access raw data.
+WalletDNA™: Clusters wallets by behavior (e.g., "Long-term holders," "OTC services") using Allium’s Wallet360™ principles
+
+## Architecture Stack
+
+graph LR
+A[React/Next.js Frontend] --> B[Next.js Middleware]
+B --> C[Neon PostgreSQL DB]
+B --> D[AI Microservice]
+B --> E[Bitcoin Node/APIs]
+
+## Core System Workflows
+
+Real-time Alert Pipeline:
+- Client sends metric subscription via WebSocket
+- Next.js middleware processes incoming blocks
+- Checks against user alert conditions in Neon DB
+- Triggers notifications via serverless functions
+- Updates UI via React context
+
+  
