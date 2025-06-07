@@ -57,13 +57,13 @@ export async function GET(request: Request) {
           address,
           balance,
           transaction_count,
-          avg_tx_value,
-          tx_frequency,
-          exchange_interaction_score,
-          mixing_score,
+          COALESCE(avg_tx_value, 0) as avg_tx_value,
+          COALESCE(tx_frequency, 0) as tx_frequency,
+          COALESCE(exchange_interaction_score, 0) as exchange_interaction_score,
+          COALESCE(mixing_score, 0) as mixing_score,
           cluster_type,
           cluster_confidence,
-          ml_cluster_id,
+          COALESCE(ml_cluster_id, 0) as ml_cluster_id,
           last_active
         FROM wallets 
         WHERE cluster_type = ${clusterType}
@@ -76,13 +76,13 @@ export async function GET(request: Request) {
           address,
           balance,
           transaction_count,
-          avg_tx_value,
-          tx_frequency,
-          exchange_interaction_score,
-          mixing_score,
+          COALESCE(avg_tx_value, 0) as avg_tx_value,
+          COALESCE(tx_frequency, 0) as tx_frequency,
+          COALESCE(exchange_interaction_score, 0) as exchange_interaction_score,
+          COALESCE(mixing_score, 0) as mixing_score,
           cluster_type,
           cluster_confidence,
-          ml_cluster_id,
+          COALESCE(ml_cluster_id, 0) as ml_cluster_id,
           last_active
         FROM wallets 
         ORDER BY balance DESC
@@ -97,8 +97,13 @@ export async function GET(request: Request) {
         address: wallet.address,
         balance: Number(wallet.balance),
         txCount: wallet.transaction_count,
+        avgTxValue: Number(wallet.avg_tx_value || 0),
+        txFrequency: Number(wallet.tx_frequency || 0),
+        exchangeScore: Number(wallet.exchange_interaction_score || 0),
+        mixingScore: Number(wallet.mixing_score || 0),
         cluster: wallet.cluster_type,
         confidence: Number(wallet.cluster_confidence),
+        mlClusterId: wallet.ml_cluster_id,
         lastActive: wallet.last_active,
         // Generate coordinates for visualization
         x: Math.random() * 800,

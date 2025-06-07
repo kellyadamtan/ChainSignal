@@ -16,13 +16,14 @@ import {
   Database,
   CheckCircle,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { TransactionVolumeChart } from "./charts/transaction-volume-chart"
 import { WalletClusterMap } from "./charts/wallet-cluster-map"
 import { MinerFlowChart } from "./charts/miner-flow-chart"
 import { AlertBuilder } from "./alert-builder"
-import { RealTimeMetrics } from "./real-time-metrics"
+import { EnhancedRealTimeMetrics } from "./enhanced-real-time-metrics"
 import { WalletClusteringAnalysis } from "./wallet-clustering-analysis"
 
 export function Dashboard() {
@@ -31,7 +32,9 @@ export function Dashboard() {
   const [isConnected, setIsConnected] = useState(false)
   const [dbInitialized, setDbInitialized] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
+  const [isMigrating, setIsMigrating] = useState(false)
   const [initResult, setInitResult] = useState<any>(null)
+  const [migrationResult, setMigrationResult] = useState<any>(null)
 
   useEffect(() => {
     // Simulate WebSocket connection
@@ -69,6 +72,35 @@ export function Dashboard() {
     }
   }
 
+  const migrateDatabase = async () => {
+    setIsMigrating(true)
+    setMigrationResult(null)
+
+    try {
+      const response = await fetch("/api/wallets/migrate", {
+        method: "POST",
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setMigrationResult(result)
+        // Refresh the page after a short delay
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      } else {
+        console.error("Failed to migrate database:", result)
+        setMigrationResult({ error: result.error, details: result.details })
+      }
+    } catch (error) {
+      console.error("Error migrating database:", error)
+      setMigrationResult({ error: "Network error", details: "Failed to connect to database" })
+    } finally {
+      setIsMigrating(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -99,6 +131,18 @@ export function Dashboard() {
                 </Button>
               )}
 
+              {/* Migration button for existing databases */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={migrateDatabase}
+                disabled={isMigrating}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                {isMigrating ? "Migrating..." : "Migrate DB"}
+              </Button>
+
               {initResult?.success && (
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle className="h-3 w-3 mr-1" />
@@ -106,7 +150,14 @@ export function Dashboard() {
                 </Badge>
               )}
 
-              {initResult?.error && (
+              {migrationResult?.success && (
+                <Badge variant="default" className="bg-blue-600">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Migrated
+                </Badge>
+              )}
+
+              {(initResult?.error || migrationResult?.error) && (
                 <Badge variant="destructive">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   DB Error
@@ -158,6 +209,33 @@ export function Dashboard() {
               )}
             </div>
           )}
+
+          {/* Show migration result */}
+          {migrationResult && (
+            <div className="mt-4">
+              {migrationResult.success ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                    <span className="text-blue-800 font-medium">{migrationResult.message}</span>
+                  </div>
+                  {migrationResult.details && (
+                    <div className="mt-2 text-sm text-blue-700">{migrationResult.details}</div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-red-800 font-medium">{migrationResult.error}</span>
+                  </div>
+                  {migrationResult.details && (
+                    <div className="mt-2 text-sm text-red-700">{migrationResult.details}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -172,8 +250,8 @@ export function Dashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Real-time Metrics */}
-            <RealTimeMetrics />
+            {/* Enhanced Real-time Metrics with Bitcoin Price */}
+            <EnhancedRealTimeMetrics />
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

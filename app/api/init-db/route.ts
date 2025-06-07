@@ -163,9 +163,9 @@ export async function POST() {
     await sql`INSERT INTO transactions (hash, value, fee, input_count, output_count, timestamp) VALUES ('tx_23_rst012', 98.54, 0.0006, 1, 5, NOW() - INTERVAL '24 hours')`
 
     // Insert sample wallets using static values
-    await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_whale_1', 1500.50, 45, 'whale', NOW() - INTERVAL '1 day')`
-    await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_whale_2', 2300.75, 67, 'whale', NOW() - INTERVAL '2 days')`
-    await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_whale_3', 1800.25, 89, 'whale', NOW() - INTERVAL '3 days')`
+    await sql`INSERT INTO wallets (address, balance, transaction_count, avg_tx_value, cluster_type, last_active) VALUES ('wallet_whale_1', 1500.50, 45, 33.34, 'whale', NOW() - INTERVAL '1 day')`
+    await sql`INSERT INTO wallets (address, balance, transaction_count, avg_tx_value, cluster_type, last_active) VALUES ('wallet_whale_2', 2300.75, 67, 34.34, 'whale', NOW() - INTERVAL '2 days')`
+    await sql`INSERT INTO wallets (address, balance, transaction_count, avg_tx_value, cluster_type, last_active) VALUES ('wallet_whale_3', 1800.25, 89, 20.23, 'whale', NOW() - INTERVAL '3 days')`
     await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_active_1', 450.30, 123, 'active', NOW() - INTERVAL '1 hour')`
     await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_active_2', 320.80, 98, 'active', NOW() - INTERVAL '2 hours')`
     await sql`INSERT INTO wallets (address, balance, transaction_count, cluster_type, last_active) VALUES ('wallet_active_3', 680.45, 156, 'active', NOW() - INTERVAL '3 hours')`
