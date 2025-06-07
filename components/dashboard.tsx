@@ -123,8 +123,8 @@ export function Dashboard() {
                   variant="outline"
                   size="sm"
                   onClick={initializeDatabase}
-                  disabled={isInitializing}
-                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                  disabled={true}
+                  className="text-orange-600 border-orange-600 hover:bg-orange-50 opacity-50 cursor-not-allowed"
                 >
                   <Database className="h-4 w-4 mr-2" />
                   {isInitializing ? "Initializing..." : "Initialize DB"}
@@ -136,8 +136,8 @@ export function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={migrateDatabase}
-                disabled={isMigrating}
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                disabled={true}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 opacity-50 cursor-not-allowed"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {isMigrating ? "Migrating..." : "Migrate DB"}
