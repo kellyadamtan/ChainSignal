@@ -41,5 +41,3 @@ Real-time Alert Pipeline:
 - Checks against user alert conditions in Neon DB
 - Triggers notifications via serverless functions
 - Updates UI via React context
-
-  
