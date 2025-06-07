@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-// Mock data generator for testing
+// Mock data generator for testing - Crypto APIs format
 export async function GET() {
   // Generate a realistic Bitcoin price around $43,000
   const basePrice = 43000
@@ -14,13 +14,23 @@ export async function GET() {
   const timestamp = Date.now()
 
   return NextResponse.json({
-    price: currentPrice,
-    change24h: change24h,
-    volume24h: 25000000000 + Math.random() * 5000000000,
-    timestamp: timestamp,
-    marketCap: currentPrice * 19500000, // Approximate supply * price
-    supply: 19500000,
-    maxSupply: 21000000,
+    apiVersion: "2023-04-25",
+    requestId: crypto.randomUUID(),
+    context: "Mock data for testing",
+    data: {
+      assetId: "btc",
+      name: "Bitcoin",
+      typeIsCrypto: true,
+      cryptoData: {
+        priceUsd: currentPrice,
+        marketCapUsd: currentPrice * 19500000,
+        volumeUsd24h: 25000000000 + Math.random() * 5000000000,
+        changePercent24h: change24h,
+        supply: 19500000,
+        maxSupply: 21000000,
+      },
+    },
     _source: "mock",
+    timestamp: timestamp,
   })
 }

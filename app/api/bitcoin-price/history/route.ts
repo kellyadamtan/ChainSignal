@@ -1,39 +1,40 @@
 import { NextResponse } from "next/server"
-import { coinCapAPI } from "@/lib/coincap-api"
+import { cryptoAPIsService } from "@/lib/crypto-apis"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const interval = (searchParams.get("interval") as any) || "h1"
+  const period = (searchParams.get("period") as any) || "1hour"
   const hours = Number.parseInt(searchParams.get("hours") || "24")
 
   try {
     // Check rate limits
-    if (coinCapAPI.isRateLimited()) {
+    if (cryptoAPIsService.isRateLimited()) {
       return NextResponse.json(
         {
           error: "Rate limit exceeded",
-          rateLimitInfo: coinCapAPI.getRateLimitInfo(),
+          rateLimitInfo: cryptoAPIsService.getRateLimitInfo(),
         },
         { status: 429 },
       )
     }
 
-    const end = Date.now()
-    const start = end - hours * 60 * 60 * 1000
+    // Calculate time range
+    const timeEnd = new Date().toISOString()
+    const timeStart = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
 
-    const historyData = await coinCapAPI.getHistoricalData("bitcoin", interval, start, end)
+    const historyData = await cryptoAPIsService.getOHLCVData("btc", period, timeStart, timeEnd)
 
     return NextResponse.json({
       data: historyData,
-      rateLimitInfo: coinCapAPI.getRateLimitInfo(),
-      _source: "coincap",
+      rateLimitInfo: cryptoAPIsService.getRateLimitInfo(),
+      _source: "cryptoapis",
     })
   } catch (error) {
-    console.error("Failed to fetch Bitcoin price history:", error)
+    console.error("Failed to fetch Bitcoin price history from Crypto APIs:", error)
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Unknown error",
-        rateLimitInfo: coinCapAPI.getRateLimitInfo(),
+        rateLimitInfo: cryptoAPIsService.getRateLimitInfo(),
       },
       { status: 500 },
     )

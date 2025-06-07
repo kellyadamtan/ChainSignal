@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, TrendingDown, Minus, Wifi, WifiOff, RefreshCw, Info } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, WifiOff, RefreshCw, Info, Zap } from "lucide-react"
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PriceData {
@@ -18,10 +18,12 @@ interface PriceData {
   rank: number
   symbol: string
   name: string
+  assetId?: string
   _source: string
   _rateLimit?: {
     remaining: number | null
     reset: Date | null
+    limit: number | null
   }
 }
 
@@ -106,14 +108,36 @@ export function BitcoinPriceCard() {
   const getSourceBadge = () => {
     if (!priceData) return null
 
-    const isLive = priceData._source === "coincap"
+    const isLive = priceData._source === "cryptoapis"
+    const isMock = priceData._source === "mock"
+
     return (
       <Badge
         variant={isLive ? "default" : "secondary"}
-        className={isLive ? "bg-green-100 text-green-800 border-green-200" : ""}
+        className={
+          isLive
+            ? "bg-blue-100 text-blue-800 border-blue-200"
+            : isMock
+              ? "bg-purple-100 text-purple-800 border-purple-200"
+              : ""
+        }
       >
-        {isLive ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
-        {isLive ? "CoinCap Live" : priceData._source}
+        {isLive ? (
+          <>
+            <Zap className="h-3 w-3 mr-1" />
+            Crypto APIs Live
+          </>
+        ) : isMock ? (
+          <>
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Mock Data
+          </>
+        ) : (
+          <>
+            <WifiOff className="h-3 w-3 mr-1" />
+            {priceData._source}
+          </>
+        )}
       </Badge>
     )
   }
@@ -150,9 +174,13 @@ export function BitcoinPriceCard() {
                     <div className="space-y-1 text-xs">
                       <div>Rank: #{priceData.rank}</div>
                       <div>Symbol: {priceData.symbol}</div>
+                      <div>Asset ID: {priceData.assetId || "BTC"}</div>
                       <div>Supply: {Number(priceData.supply).toLocaleString()} BTC</div>
                       <div>Max Supply: {Number(priceData.maxSupply).toLocaleString()} BTC</div>
-                      {priceData._rateLimit && <div>Rate Limit: {priceData._rateLimit.remaining} remaining</div>}
+                      {priceData._rateLimit && priceData._rateLimit.remaining && (
+                        <div>Rate Limit: {priceData._rateLimit.remaining} remaining</div>
+                      )}
+                      <div>Source: {priceData._source}</div>
                     </div>
                   </TooltipContent>
                 </UITooltip>
@@ -205,12 +233,29 @@ export function BitcoinPriceCard() {
             </div>
           )}
 
+          {/* Rate Limit Info */}
+          {priceData?._rateLimit && priceData._rateLimit.remaining !== null && (
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>API Rate Limit</span>
+                <span>
+                  {priceData._rateLimit.remaining} / {priceData._rateLimit.limit || "Unknown"} remaining
+                </span>
+              </div>
+              {priceData._rateLimit.reset && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Resets: {priceData._rateLimit.reset.toLocaleTimeString()}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Loading State */}
           {isLoading && !priceData && (
             <div className="h-24 w-full flex items-center justify-center bg-muted/20 rounded-md">
               <div className="text-sm text-muted-foreground flex items-center space-x-2">
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>Loading Bitcoin price data...</span>
+                <span>Loading Bitcoin price data from Crypto APIs...</span>
               </div>
             </div>
           )}
