@@ -5,19 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Moon,
-  Sun,
-  Settings,
-  Bell,
-  TrendingUp,
-  Wallet,
-  Activity,
-  Database,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react"
+import { Moon, Sun, Settings, Bell, TrendingUp, Wallet, Activity, CheckCircle, AlertCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { TransactionVolumeChart } from "./charts/transaction-volume-chart"
 import { WalletClusterMap } from "./charts/wallet-cluster-map"
@@ -118,31 +106,6 @@ export function Dashboard() {
             </div>
 
             <div className="flex items-center space-x-4">
-              {!dbInitialized && !initResult?.success && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={initializeDatabase}
-                  disabled={true}
-                  className="text-orange-600 border-orange-600 hover:bg-orange-50 opacity-50 cursor-not-allowed"
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  {isInitializing ? "Initializing..." : "Initialize DB"}
-                </Button>
-              )}
-
-              {/* Migration button for existing databases */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={migrateDatabase}
-                disabled={true}
-                className="text-blue-600 border-blue-600 hover:bg-blue-50 opacity-50 cursor-not-allowed"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {isMigrating ? "Migrating..." : "Migrate DB"}
-              </Button>
-
               {initResult?.success && (
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle className="h-3 w-3 mr-1" />
