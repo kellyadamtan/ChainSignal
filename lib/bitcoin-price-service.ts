@@ -37,7 +37,7 @@ class BitcoinPriceService {
 
       this.lastFetchTime = Date.now()
 
-      // Use our own API endpoint that connects to Crypto APIs
+      // Use our improved API endpoint
       const response = await fetch("/api/bitcoin-price/current")
 
       if (!response.ok) {
@@ -62,7 +62,7 @@ class BitcoinPriceService {
         this.retryCount = 0 // Reset retry count on success
       }
     } catch (error) {
-      console.error("Error fetching Bitcoin price from Crypto APIs:", error)
+      console.error("Error fetching Bitcoin price:", error)
       this.isConnected = false
 
       // Implement exponential backoff for retries
