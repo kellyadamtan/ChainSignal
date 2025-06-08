@@ -1,33 +1,28 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { PayPalService } from "@/lib/paypal-service"
-import { SUBSCRIPTION_PLANS } from "@/lib/subscription-service"
 
+// Mock PayPal subscription creation
 export async function POST(request: NextRequest) {
   try {
-    const { tier, userEmail } = await request.json()
+    const { tier } = await request.json()
 
-    if (!tier || !userEmail) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (!tier || !["pro", "enterprise"].includes(tier)) {
+      return NextResponse.json({ error: "Invalid tier specified" }, { status: 400 })
     }
 
-    const plan = SUBSCRIPTION_PLANS.find((p) => p.tier === tier)
-    if (!plan || !plan.paypalPlanId) {
-      return NextResponse.json({ error: "Invalid subscription plan" }, { status: 400 })
-    }
+    // In a real implementation, you would:
+    // 1. Create PayPal subscription using the PayPal SDK
+    // 2. Store pending subscription in database
+    // 3. Return the subscription ID for approval
 
-    const paypalService = new PayPalService()
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    // Mock subscription creation
+    const mockSubscriptionId = `SUB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    const subscription = await paypalService.createSubscription({
-      planId: plan.paypalPlanId,
-      userEmail,
-      returnUrl: `${baseUrl}/subscription/success`,
-      cancelUrl: `${baseUrl}/pricing`,
-    })
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     return NextResponse.json({
-      subscriptionId: subscription.id,
-      approvalUrl: subscription.approvalUrl,
+      subscriptionId: mockSubscriptionId,
+      status: "pending_approval",
     })
   } catch (error) {
     console.error("Subscription creation error:", error)
