@@ -1,6 +1,8 @@
 ## Overview
 
-ChainSignal is SaaS platform designed to democratize institutional-grade insights with a unique user-centric approach.
+ChainSignal is a free SaaS platform dashboard for Bitcoin on-chain analytics. ChainSignal bridges the gap between complex on-chain data and actionable insights, empowering small to medium investors with tools previously reserved for institutions. ChainSignal is a product from TGI Technologies. 
+
+www.chainsignal.biz.id
 
 ## ChainSignal’s Differentiation Strategy
 
