@@ -55,6 +55,7 @@ export default function SignupPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedTier = searchParams.get("plan") as Tier
+  const [isLoginMode, setIsLoginMode] = useState(false)
 
   // Pre-select tier from URL parameter
   useState(() => {
@@ -112,79 +113,174 @@ export default function SignupPage() {
   const TierSelection = () => (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Upgrade Your ChainSignal Account</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Unlock advanced Bitcoin analytics, entity classification, and risk monitoring tools
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {Object.entries(tiers).map(([key, tier]) => {
-          const Icon = tier.icon
-          const isSelected = selectedTier === key
-
-          return (
-            <Card
-              key={key}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                isSelected ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-md"
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex rounded-md shadow-sm" role="group">
+            <button
+              type="button"
+              onClick={() => setIsLoginMode(true)}
+              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+                isLoginMode ? "bg-primary text-primary-foreground" : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
-              onClick={() => setSelectedTier(key as Tier)}
             >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        tier.color === "blue" ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"
-                      }`}
-                    >
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{tier.name}</CardTitle>
-                      <CardDescription>{tier.description}</CardDescription>
-                    </div>
-                  </div>
-                  {key === "enterprise" && (
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                      Most Popular
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-3xl font-bold">${tier.price}</span>
-                  <span className="text-gray-500">/month</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {tier.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className={`w-full mt-6 ${
-                    isSelected
-                      ? tier.color === "blue"
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-purple-600 hover:bg-purple-700"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  variant={isSelected ? "default" : "outline"}
-                >
-                  {isSelected ? "Selected" : `Choose ${tier.name}`}
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsLoginMode(false)}
+              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+                !isLoginMode ? "bg-primary text-primary-foreground" : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
+
+        {isLoginMode ? (
+          <>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome Back to ChainSignal</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">Log in to access your Bitcoin analytics dashboard</p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Upgrade Your ChainSignal Account</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Unlock advanced Bitcoin analytics, entity classification, and risk monitoring tools
+            </p>
+          </>
+        )}
       </div>
 
-      {selectedTier && (
+      {isLoginMode ? (
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Login to Your Account</CardTitle>
+              <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full p-2 border rounded-md"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="remember" className="rounded" />
+                    <label htmlFor="remember" className="text-sm text-gray-600">
+                      Remember me
+                    </label>
+                  </div>
+                  <a href="#" className="text-sm text-blue-600 hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    router.push("/dashboard")
+                  }}
+                >
+                  Login
+                </Button>
+              </form>
+            </CardContent>
+            <div className="p-6 border-t text-center text-sm text-gray-600">
+              Don't have an account?{" "}
+              <button onClick={() => setIsLoginMode(false)} className="text-blue-600 hover:underline">
+                Sign up
+              </button>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {Object.entries(tiers).map(([key, tier]) => {
+            const Icon = tier.icon
+            const isSelected = selectedTier === key
+
+            return (
+              <Card
+                key={key}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                  isSelected ? "ring-2 ring-blue-500 shadow-lg" : "hover:shadow-md"
+                }`}
+                onClick={() => setSelectedTier(key as Tier)}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          tier.color === "blue" ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"
+                        }`}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl">{tier.name}</CardTitle>
+                        <CardDescription>{tier.description}</CardDescription>
+                      </div>
+                    </div>
+                    {key === "enterprise" && (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                        Most Popular
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-3xl font-bold">${tier.price}</span>
+                    <span className="text-gray-500">/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {tier.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start space-x-3">
+                        <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className={`w-full mt-6 ${
+                      isSelected
+                        ? tier.color === "blue"
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : "bg-purple-600 hover:bg-purple-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    variant={isSelected ? "default" : "outline"}
+                  >
+                    {isSelected ? "Selected" : `Choose ${tier.name}`}
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
+
+      {selectedTier && !isLoginMode && (
         <div className="flex justify-center">
           <Button onClick={() => setStep("payment")} className="px-8 py-3 text-lg" size="lg">
             Continue to Payment
