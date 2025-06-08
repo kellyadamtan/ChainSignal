@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loader2, AlertTriangle, TrendingUp, Shield, Eye, Network, Activity } from "lucide-react"
 
+import { EnterprisePaywall } from "@/components/enterprise-paywall"
 import ComplianceRulesPanel from "@/components/enterprise/compliance-rules-panel"
 import WalletIntelligencePanel from "@/components/enterprise/wallet-intelligence-panel"
 import DarkPoolDetectionPanel from "@/components/enterprise/dark-pool-detection-panel"
@@ -23,16 +24,12 @@ export default function EnterpriseDashboard() {
   const [activeTab, setActiveTab] = useState("compliance")
 
   useEffect(() => {
-    // Check if user is authenticated and has enterprise access
+    // Check if user is authenticated
     if (status === "unauthenticated") {
       redirect("/auth/signin?callbackUrl=/enterprise/dashboard")
     }
 
     if (status === "authenticated") {
-      if (session?.user?.subscriptionTier !== "enterprise") {
-        redirect("/pricing?upgrade=enterprise")
-      }
-
       // Fetch enterprise data
       fetchEnterpriseData()
     }
@@ -64,6 +61,17 @@ export default function EnterpriseDashboard() {
           <h2 className="text-xl font-semibold">Loading enterprise dashboard...</h2>
         </div>
       </div>
+    )
+  }
+
+  // Show paywall if user is not on enterprise tier
+  if (session?.user?.subscriptionTier !== "enterprise") {
+    return (
+      <EnterprisePaywall
+        title="Enterprise Dashboard"
+        description="Access advanced blockchain analytics and compliance tools designed for institutional clients"
+        feature="enterpriseAnalytics"
+      />
     )
   }
 

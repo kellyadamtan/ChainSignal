@@ -8,6 +8,7 @@ const tiers = [
     price: "$0",
     description: "Get started with our basic features.",
     features: ["Basic analytics", "Up to 100 requests per month", "Community support"],
+    cta: "Sign Up",
   },
   {
     id: "pro",
