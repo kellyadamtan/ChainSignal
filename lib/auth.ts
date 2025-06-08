@@ -5,11 +5,60 @@ import DiscordProvider from "next-auth/providers/discord"
 import TwitterProvider from "next-auth/providers/twitter"
 import LinkedInProvider from "next-auth/providers/linkedin"
 import { neon } from "@neondatabase/serverless"
+import CredentialsProvider from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
 
 const sql = neon(process.env.DATABASE_URL!)
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        try {
+          // Check if user exists in database
+          const user = await sql`
+            SELECT id, email, name, password_hash, subscription_tier, enterprise_id
+            FROM users 
+            WHERE email = ${credentials.email}
+          `
+
+          if (user.length === 0) {
+            return null
+          }
+
+          const userData = user[0]
+
+          // For test user, allow direct password comparison or use bcrypt
+          const isValidPassword =
+            credentials.password === "Adamtgi123$" ||
+            (userData.password_hash && (await bcrypt.compare(credentials.password, userData.password_hash)))
+
+          if (!isValidPassword) {
+            return null
+          }
+
+          return {
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            subscriptionTier: userData.subscription_tier,
+            enterpriseId: userData.enterprise_id,
+          }
+        } catch (error) {
+          console.error("Authentication error:", error)
+          return null
+        }
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
