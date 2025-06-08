@@ -8,7 +8,6 @@ const tiers = [
     price: "$0",
     description: "Get started with our basic features.",
     features: ["Basic analytics", "Up to 100 requests per month", "Community support"],
-    cta: "Sign up for free",
   },
   {
     id: "pro",
@@ -66,9 +65,11 @@ export default function PricingPage() {
                 </ul>
               </div>
               <div className="mt-8">
-                <Button className="w-full" variant={tier.id === "enterprise" ? "default" : "outline"} asChild>
-                  <Link href={`/signup?plan=${tier.id}`}>{tier.cta}</Link>
-                </Button>
+                {tier.cta && (
+                  <Button className="w-full" variant={tier.id === "enterprise" ? "default" : "outline"} asChild>
+                    <Link href={`/signup?plan=${tier.id}`}>{tier.cta}</Link>
+                  </Button>
+                )}
               </div>
             </div>
           ))}
