@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Users,
   Shield,
+  Brain,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { TransactionVolumeChart } from "./charts/transaction-volume-chart"
@@ -30,6 +31,7 @@ import { WalletClusteringAnalysis } from "./wallet-clustering-analysis"
 import { EntityMonitor } from "./entity-monitor"
 import { RiskDashboard } from "./risk-dashboard"
 import { SubscriptionProvider } from "@/hooks/use-subscription"
+import { AIAnalysisDashboard } from "./ai-analysis-dashboard"
 
 interface DbStatusInfo {
   status: "checking" | "connected" | "error"
@@ -206,7 +208,7 @@ export function Dashboard() {
           {/* Main Content */}
           <main className="container mx-auto px-4 py-6">
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="entity-monitor">
@@ -216,6 +218,10 @@ export function Dashboard() {
                 <TabsTrigger value="risk-dashboard">
                   <Shield className="h-4 w-4 mr-1" />
                   Risk
+                </TabsTrigger>
+                <TabsTrigger value="ai-analysis">
+                  <Brain className="h-4 w-4 mr-1" />
+                  AI Analysis
                 </TabsTrigger>
                 <TabsTrigger value="alerts">Alerts</TabsTrigger>
                 <TabsTrigger value="clusters">Clusters</TabsTrigger>
@@ -302,6 +308,10 @@ export function Dashboard() {
 
               <TabsContent value="risk-dashboard" className="space-y-6">
                 <RiskDashboard />
+              </TabsContent>
+
+              <TabsContent value="ai-analysis" className="space-y-6">
+                <AIAnalysisDashboard />
               </TabsContent>
             </Tabs>
           </main>

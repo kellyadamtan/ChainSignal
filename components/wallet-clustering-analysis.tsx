@@ -87,20 +87,26 @@ export function WalletClusteringAnalysis() {
 
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  useEffect(() => {
-    const fetchClusterData = async () => {
-      try {
-        const response = await fetch("/api/wallets/clustering-analysis")
-        const result = await response.json()
+  const fetchClusterData = async () => {
+    try {
+      const response = await fetch("/api/wallets/clustering-analysis")
 
-        if (result.clusters) {
-          setClusterData(result.clusters)
-        }
-      } catch (error) {
-        console.error("Failed to fetch clustering analysis:", error)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-    }
 
+      const result = await response.json()
+
+      if (result.success && result.clusters) {
+        setClusterData(result.clusters)
+      }
+    } catch (error) {
+      console.error("Failed to fetch clustering analysis:", error)
+      // Keep using the default mock data if API fails
+    }
+  }
+
+  useEffect(() => {
     fetchClusterData()
     const interval = setInterval(fetchClusterData, 300000) // Update every 5 minutes
 
@@ -113,14 +119,23 @@ export function WalletClusteringAnalysis() {
       const response = await fetch("/api/wallets/ml-clustering", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ algorithm: "dbscan", features: ["balance", "tx_frequency", "mixing_score"] }),
+        body: JSON.stringify({
+          algorithm: "dbscan",
+          features: ["balance", "tx_frequency", "mixing_score"],
+        }),
       })
 
-      if (response.ok) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
         // Refresh data after ML analysis
         setTimeout(() => {
-          window.location.reload()
-        }, 3000)
+          fetchClusterData()
+        }, 1000)
       }
     } catch (error) {
       console.error("ML clustering failed:", error)
