@@ -6,20 +6,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowUpIcon, ArrowDownIcon, RefreshCwIcon, TrendingUpIcon } from "lucide-react"
-import { Line } from "react-chartjs-2"
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js"
+import dynamic from "next/dynamic"
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+// Dynamically import Chart.js components to avoid SSR issues
+const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
+  ssr: false,
+  loading: () => <Skeleton className="h-80 w-full" />,
+})
 
 interface MarketData {
   marketData: any
@@ -33,6 +26,33 @@ export default function MarketPage() {
   const [error, setError] = useState<string | null>(null)
   const [timeframe, setTimeframe] = useState("30")
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [chartReady, setChartReady] = useState(false)
+
+  // Initialize Chart.js on client side only
+  useEffect(() => {
+    const initChart = async () => {
+      const {
+        Chart,
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend,
+        Filler,
+        TimeScale,
+      } = await import("chart.js")
+
+      const { default: DateAdapter } = await import("chartjs-adapter-date-fns")
+
+      Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, TimeScale)
+
+      setChartReady(true)
+    }
+
+    initChart()
+  }, [])
 
   const fetchData = async () => {
     try {
@@ -81,10 +101,10 @@ export default function MarketPage() {
   }
 
   const getChartData = () => {
-    if (!data?.historicalData?.prices) return null
+    if (!data?.historicalData?.prices || !chartReady) return null
 
     const prices = data.historicalData.prices.map((price: [number, number]) => ({
-      x: new Date(price[0]),
+      x: price[0], // Use timestamp directly
       y: price[1],
     }))
 
@@ -222,7 +242,11 @@ export default function MarketPage() {
               ) : data?.marketData ? (
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                   <div className="flex items-center gap-4">
-                    <img src={data.marketData.image.large || "/placeholder.svg"} alt="Bitcoin" className="w-16 h-16" />
+                    <img
+                      src={data.marketData.image?.large || "/placeholder.svg?height=64&width=64"}
+                      alt="Bitcoin"
+                      className="w-16 h-16"
+                    />
                     <div>
                       <h2 className="text-2xl font-bold">Bitcoin (BTC)</h2>
                       <p className="text-sm text-muted-foreground">
@@ -275,7 +299,7 @@ export default function MarketPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
+              {loading || !chartReady ? (
                 <Skeleton className="h-80 w-full" />
               ) : getChartData() ? (
                 <div className="h-80">

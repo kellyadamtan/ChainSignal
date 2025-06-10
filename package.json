@@ -43,6 +43,7 @@
     "autoprefixer": "^10.4.20",
     "bcryptjs": "latest",
     "chart.js": "latest",
+    "chartjs-adapter-date-fns": "latest",
     "child_process": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
