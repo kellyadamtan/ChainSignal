@@ -5,19 +5,54 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowUpIcon, ArrowDownIcon, RefreshCwIcon, TrendingUpIcon } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import {
+  RefreshCwIcon,
+  TrendingUpIcon,
+  NewspaperIcon as NewsIcon,
+  ActivityIcon,
+  AlertTriangleIcon,
+  BrainIcon,
+  BarChart3Icon,
+} from "lucide-react"
 import dynamic from "next/dynamic"
 
-// Dynamically import Chart.js components to avoid SSR issues
-const Line = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
+// Dynamic imports to prevent SSR issues
+const AdvancedChart = dynamic(() => import("@/components/market/advanced-chart"), {
   ssr: false,
   loading: () => <Skeleton className="h-80 w-full" />,
+})
+
+const SentimentGauge = dynamic(() => import("@/components/market/sentiment-gauge"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-32 w-full" />,
+})
+
+const NewsOverlay = dynamic(() => import("@/components/market/news-overlay"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-40 w-full" />,
+})
+
+const OnChainMetrics = dynamic(() => import("@/components/market/onchain-metrics"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-60 w-full" />,
+})
+
+const InstitutionalTracker = dynamic(() => import("@/components/market/institutional-tracker"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-48 w-full" />,
 })
 
 interface MarketData {
   marketData: any
   historicalData: any
   globalData: any
+  fearGreedIndex?: number
+  onChainData?: any
+  newsData?: any
+  institutionalData?: any
 }
 
 export default function MarketPage() {
@@ -26,46 +61,54 @@ export default function MarketPage() {
   const [error, setError] = useState<string | null>(null)
   const [timeframe, setTimeframe] = useState("30")
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const [chartReady, setChartReady] = useState(false)
 
-  // Initialize Chart.js on client side only
-  useEffect(() => {
-    const initChart = async () => {
-      const {
-        Chart,
-        CategoryScale,
-        LinearScale,
-        PointElement,
-        LineElement,
-        Title,
-        Tooltip,
-        Legend,
-        Filler,
-        TimeScale,
-      } = await import("chart.js")
-
-      const { default: DateAdapter } = await import("chartjs-adapter-date-fns")
-
-      Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, TimeScale)
-
-      setChartReady(true)
-    }
-
-    initChart()
-  }, [])
+  // Chart overlay toggles
+  const [showNews, setShowNews] = useState(true)
+  const [showWhaleTransactions, setShowWhaleTransactions] = useState(true)
+  const [showLiquidityHeatmap, setShowLiquidityHeatmap] = useState(false)
+  const [showPatternRecognition, setShowPatternRecognition] = useState(false)
 
   const fetchData = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/market/bitcoin?days=${timeframe}`)
+      // Fetch multiple data sources in parallel
+      const [marketResponse, fearGreedResponse, onChainResponse, newsResponse] = await Promise.allSettled([
+        fetch(`/api/market/bitcoin?days=${timeframe}`),
+        fetch("/api/market/fear-greed"),
+        fetch("/api/market/onchain"),
+        fetch("/api/market/news"),
+      ])
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch market data")
+      const result: MarketData = { marketData: null, historicalData: null, globalData: null }
+
+      // Process market data
+      if (marketResponse.status === "fulfilled" && marketResponse.value.ok) {
+        const marketData = await marketResponse.value.json()
+        result.marketData = marketData.marketData
+        result.historicalData = marketData.historicalData
+        result.globalData = marketData.globalData
       }
 
-      const result = await response.json()
+      // Process fear & greed index
+      if (fearGreedResponse.status === "fulfilled" && fearGreedResponse.value.ok) {
+        const fearGreedData = await fearGreedResponse.value.json()
+        result.fearGreedIndex = fearGreedData.value
+      }
+
+      // Process on-chain data
+      if (onChainResponse.status === "fulfilled" && onChainResponse.value.ok) {
+        const onChainData = await onChainResponse.value.json()
+        result.onChainData = onChainData
+      }
+
+      // Process news data
+      if (newsResponse.status === "fulfilled" && newsResponse.value.ok) {
+        const newsData = await newsResponse.value.json()
+        result.newsData = newsData
+      }
+
       setData(result)
       setLastUpdated(new Date())
     } catch (err) {
@@ -100,76 +143,11 @@ export default function MarketPage() {
     return `$${num.toLocaleString()}`
   }
 
-  const getChartData = () => {
-    if (!data?.historicalData?.prices || !chartReady) return null
-
-    const prices = data.historicalData.prices.map((price: [number, number]) => ({
-      x: price[0], // Use timestamp directly
-      y: price[1],
-    }))
-
-    return {
-      datasets: [
-        {
-          label: "Bitcoin Price",
-          data: prices,
-          borderColor: "rgb(249, 115, 22)",
-          backgroundColor: "rgba(249, 115, 22, 0.1)",
-          tension: 0.4,
-          pointRadius: 0,
-          fill: true,
-        },
-      ],
-    }
-  }
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context: any) => formatPrice(context.parsed.y),
-          title: (context: any) => {
-            const date = new Date(context[0].parsed.x)
-            return date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        type: "time" as const,
-        time: {
-          unit: timeframe === "1" ? "hour" : "day",
-        },
-        grid: { display: false },
-      },
-      y: {
-        position: "right" as const,
-        ticks: {
-          callback: (value: any) => formatPrice(value),
-        },
-      },
-    },
-    interaction: {
-      intersect: false,
-      mode: "index" as const,
-    },
-  }
-
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Market Data</h1>
+          <h1 className="text-2xl font-bold mb-4">Advanced Market Data</h1>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
             <p className="text-red-600">Error loading market data: {error}</p>
           </div>
@@ -189,9 +167,11 @@ export default function MarketPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <TrendingUpIcon className="h-8 w-8 text-orange-500" />
-            Bitcoin Market Data
+            Advanced Bitcoin Market
           </h1>
-          <p className="text-muted-foreground mt-1">Real-time market data powered by CoinGecko</p>
+          <p className="text-muted-foreground mt-1">
+            Comprehensive trading dashboard with on-chain metrics, sentiment analysis, and AI insights
+          </p>
         </div>
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
           {lastUpdated && (
@@ -206,190 +186,310 @@ export default function MarketPage() {
         </div>
       </div>
 
-      {/* Global Stats */}
-      {data?.globalData && (
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">BTC Dominance</p>
-                <p className="text-2xl font-bold">{data.globalData.data.market_cap_percentage.btc.toFixed(1)}%</p>
+      {/* Quick Stats Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Current Price</p>
+                <p className="text-xl font-bold">
+                  {data?.marketData ? formatPrice(data.marketData.market_data.current_price.usd) : "Loading..."}
+                </p>
               </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">Total Market Cap</p>
-                <p className="text-2xl font-bold">{formatLargeNumber(data.globalData.data.total_market_cap.usd)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">24h Volume</p>
-                <p className="text-2xl font-bold">{formatLargeNumber(data.globalData.data.total_volume.usd)}</p>
-              </div>
+              <TrendingUpIcon className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Price Card */}
-        <div className="lg:col-span-2">
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-12 w-32" />
-                  <Skeleton className="h-6 w-24" />
-                </div>
-              ) : data?.marketData ? (
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={data.marketData.image?.large || "/placeholder.svg?height=64&width=64"}
-                      alt="Bitcoin"
-                      className="w-16 h-16"
-                    />
-                    <div>
-                      <h2 className="text-2xl font-bold">Bitcoin (BTC)</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Last updated: {new Date(data.marketData.last_updated).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-4 sm:mt-0 text-right">
-                    <div className="text-3xl font-bold">
-                      {formatPrice(data.marketData.market_data.current_price.usd)}
-                    </div>
-                    <div
-                      className={`flex items-center justify-end gap-1 mt-1 ${
-                        data.marketData.market_data.price_change_24h >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {data.marketData.market_data.price_change_24h >= 0 ? (
-                        <ArrowUpIcon className="h-4 w-4" />
-                      ) : (
-                        <ArrowDownIcon className="h-4 w-4" />
-                      )}
-                      <span>
-                        {formatPrice(Math.abs(data.marketData.market_data.price_change_24h))} (
-                        {data.marketData.market_data.price_change_percentage_24h.toFixed(2)}%)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          {/* Chart */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Price History</CardTitle>
-                <div className="flex gap-2">
-                  {["1", "7", "30", "90", "365"].map((days) => (
-                    <Button
-                      key={days}
-                      size="sm"
-                      variant={timeframe === days ? "default" : "outline"}
-                      onClick={() => setTimeframe(days)}
-                    >
-                      {days === "1" ? "1D" : days === "7" ? "7D" : days === "30" ? "30D" : days === "90" ? "90D" : "1Y"}
-                    </Button>
-                  ))}
-                </div>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Fear & Greed</p>
+                <p className="text-xl font-bold">
+                  {data?.fearGreedIndex ? `${data.fearGreedIndex}/100` : "Loading..."}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              {loading || !chartReady ? (
-                <Skeleton className="h-80 w-full" />
-              ) : getChartData() ? (
-                <div className="h-80">
-                  <Line data={getChartData()!} options={chartOptions} />
-                </div>
-              ) : (
-                <div className="h-80 flex items-center justify-center text-muted-foreground">
-                  No chart data available
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              <AlertTriangleIcon className="h-8 w-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Market Stats */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Market Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-4">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-6 w-32" />
-                    </div>
-                  ))}
-                </div>
-              ) : data?.marketData ? (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Market Cap</p>
-                    <p className="text-lg font-semibold">
-                      {formatLargeNumber(data.marketData.market_data.market_cap.usd)}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        data.marketData.market_data.market_cap_change_percentage_24h >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {data.marketData.market_data.market_cap_change_percentage_24h.toFixed(2)}% (24h)
-                    </p>
-                  </div>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">24h Volume</p>
+                <p className="text-xl font-bold">
+                  {data?.marketData ? formatLargeNumber(data.marketData.market_data.total_volume.usd) : "Loading..."}
+                </p>
+              </div>
+              <BarChart3Icon className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
 
-                  <div>
-                    <p className="text-sm text-muted-foreground">24h Trading Volume</p>
-                    <p className="text-lg font-semibold">
-                      {formatLargeNumber(data.marketData.market_data.total_volume.usd)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">All-Time High</p>
-                    <p className="text-lg font-semibold">{formatPrice(data.marketData.market_data.ath.usd)}</p>
-                    <p className="text-sm text-red-600">
-                      {data.marketData.market_data.ath_change_percentage.usd.toFixed(2)}% from ATH
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">All-Time Low</p>
-                    <p className="text-lg font-semibold">{formatPrice(data.marketData.market_data.atl.usd)}</p>
-                    <p className="text-sm text-green-600">
-                      {data.marketData.market_data.atl_change_percentage.usd.toFixed(2)}% from ATL
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">Circulating Supply</p>
-                    <p className="text-lg font-semibold">
-                      {data.marketData.market_data.circulating_supply.toLocaleString()} BTC
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-muted-foreground">Max Supply</p>
-                    <p className="text-lg font-semibold">
-                      {data.marketData.market_data.max_supply?.toLocaleString() || "21,000,000"} BTC
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Market Cap</p>
+                <p className="text-xl font-bold">
+                  {data?.marketData ? formatLargeNumber(data.marketData.market_data.market_cap.usd) : "Loading..."}
+                </p>
+              </div>
+              <ActivityIcon className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <Tabs defaultValue="advanced-chart" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="advanced-chart">Advanced Chart</TabsTrigger>
+          <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
+          <TabsTrigger value="onchain">On-Chain</TabsTrigger>
+          <TabsTrigger value="institutional">Institutional</TabsTrigger>
+          <TabsTrigger value="news">News & Events</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="advanced-chart" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Chart */}
+            <div className="lg:col-span-3">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="flex items-center gap-2">
+                      <BrainIcon className="h-5 w-5" />
+                      AI-Enhanced Price Chart
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      {["1", "7", "30", "90", "365"].map((days) => (
+                        <Button
+                          key={days}
+                          size="sm"
+                          variant={timeframe === days ? "default" : "outline"}
+                          onClick={() => setTimeframe(days)}
+                        >
+                          {days === "1"
+                            ? "1D"
+                            : days === "7"
+                              ? "7D"
+                              : days === "30"
+                                ? "30D"
+                                : days === "90"
+                                  ? "90D"
+                                  : "1Y"}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chart Overlay Controls */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="news-overlay" checked={showNews} onCheckedChange={setShowNews} />
+                      <Label htmlFor="news-overlay" className="text-sm">
+                        News Events
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="whale-transactions"
+                        checked={showWhaleTransactions}
+                        onCheckedChange={setShowWhaleTransactions}
+                      />
+                      <Label htmlFor="whale-transactions" className="text-sm">
+                        Whale Moves
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="liquidity-heatmap"
+                        checked={showLiquidityHeatmap}
+                        onCheckedChange={setShowLiquidityHeatmap}
+                      />
+                      <Label htmlFor="liquidity-heatmap" className="text-sm">
+                        Liquidity Zones
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="pattern-recognition"
+                        checked={showPatternRecognition}
+                        onCheckedChange={setShowPatternRecognition}
+                      />
+                      <Label htmlFor="pattern-recognition" className="text-sm">
+                        AI Patterns
+                      </Label>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AdvancedChart
+                    data={data}
+                    timeframe={timeframe}
+                    overlays={{
+                      showNews,
+                      showWhaleTransactions,
+                      showLiquidityHeatmap,
+                      showPatternRecognition,
+                    }}
+                    loading={loading}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Side Panel */}
+            <div className="space-y-4">
+              {/* Fear & Greed Gauge */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangleIcon className="h-5 w-5" />
+                    Market Sentiment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SentimentGauge value={data?.fearGreedIndex || 50} loading={loading} />
+                </CardContent>
+              </Card>
+
+              {/* Quick Stats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Market Statistics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="space-y-4">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-6 w-32" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : data?.marketData ? (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Market Cap</p>
+                        <p className="text-lg font-semibold">
+                          {formatLargeNumber(data.marketData.market_data.market_cap.usd)}
+                        </p>
+                        <p
+                          className={`text-sm ${
+                            data.marketData.market_data.market_cap_change_percentage_24h >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {data.marketData.market_data.market_cap_change_percentage_24h.toFixed(2)}% (24h)
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground">24h Trading Volume</p>
+                        <p className="text-lg font-semibold">
+                          {formatLargeNumber(data.marketData.market_data.total_volume.usd)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground">All-Time High</p>
+                        <p className="text-lg font-semibold">{formatPrice(data.marketData.market_data.ath.usd)}</p>
+                        <p className="text-sm text-red-600">
+                          {data.marketData.market_data.ath_change_percentage.usd.toFixed(2)}% from ATH
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground">Circulating Supply</p>
+                        <p className="text-lg font-semibold">
+                          {data.marketData.market_data.circulating_supply.toLocaleString()} BTC
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sentiment">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangleIcon className="h-5 w-5" />
+                  Fear & Greed Index
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SentimentGauge value={data?.fearGreedIndex || 50} loading={loading} showDetails />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <NewsIcon className="h-5 w-5" />
+                  News Sentiment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <NewsOverlay data={data?.newsData} loading={loading} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="onchain">
+          <OnChainMetrics data={data?.onChainData} loading={loading} />
+        </TabsContent>
+
+        <TabsContent value="institutional">
+          <InstitutionalTracker data={data?.institutionalData} loading={loading} />
+        </TabsContent>
+
+        <TabsContent value="news">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <NewsOverlay data={data?.newsData} loading={loading} expanded />
+            </div>
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Market Events Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-l-2 border-orange-500 pl-4">
+                      <p className="font-semibold">Bitcoin Halving</p>
+                      <p className="text-sm text-muted-foreground">Next: April 2028</p>
+                      <p className="text-xs text-muted-foreground">~1,200 days remaining</p>
+                    </div>
+                    <div className="border-l-2 border-blue-500 pl-4">
+                      <p className="font-semibold">ETF Rebalancing</p>
+                      <p className="text-sm text-muted-foreground">Monthly: End of month</p>
+                      <p className="text-xs text-muted-foreground">Potential volume spike</p>
+                    </div>
+                    <div className="border-l-2 border-green-500 pl-4">
+                      <p className="font-semibold">Options Expiry</p>
+                      <p className="text-sm text-muted-foreground">Weekly: Every Friday</p>
+                      <p className="text-xs text-muted-foreground">Increased volatility</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
