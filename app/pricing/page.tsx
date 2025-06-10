@@ -8,12 +8,12 @@ const tiers = [
     price: "$0",
     description: "Get started with our basic features.",
     features: ["Basic analytics", "Up to 100 requests per month", "Community support"],
-    cta: "Sign Up",
+    cta: null, // Remove Sign Up button
   },
   {
     id: "pro",
     name: "Pro",
-    price: "$19",
+    price: "$49", // Changed from $19 to $49
     description: "Unlock advanced features for your growing business.",
     features: ["Advanced analytics", "Unlimited requests", "Priority support", "Custom integrations"],
     cta: "Upgrade to Pro",
@@ -21,10 +21,10 @@ const tiers = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "Contact us",
+    price: "$299", // Changed from "Contact us" to "$299"
     description: "Custom solutions tailored to your specific needs.",
     features: ["Dedicated support", "Custom SLAs", "Advanced security features", "Dedicated account manager"],
-    cta: "Contact us",
+    cta: "Upgrade to Enterprise", // Changed from "Contact us" to "Upgrade to Enterprise"
   },
 ]
 
