@@ -5,74 +5,78 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ExternalLinkIcon, TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 
+interface NewsItem {
+  title: string
+  summary: string
+  sentiment: number
+  impact: "high" | "medium" | "low"
+  timestamp: string
+  source: string
+  url?: string
+}
+
 interface NewsOverlayProps {
-  data: any
-  loading: boolean
+  data?: NewsItem[]
+  loading?: boolean
   expanded?: boolean
 }
 
-export default function NewsOverlay({ data, loading, expanded = false }: NewsOverlayProps) {
-  // Mock news data for demonstration
-  const mockNews = [
+export default function NewsOverlay({ data, loading, expanded }: NewsOverlayProps) {
+  // Mock data for demonstration
+  const mockNews: NewsItem[] = [
     {
-      id: 1,
       title: "Bitcoin ETF Sees Record Inflows",
-      sentiment: 0.8,
+      summary: "Institutional investors pour $2.1B into Bitcoin ETFs this week",
+      sentiment: 85,
       impact: "high",
-      time: "2 hours ago",
+      timestamp: "2 hours ago",
       source: "CoinDesk",
-      url: "#",
     },
     {
-      id: 2,
       title: "Federal Reserve Hints at Rate Cuts",
-      sentiment: 0.6,
+      summary: "Powell suggests potential monetary policy shifts affecting crypto markets",
+      sentiment: 72,
       impact: "medium",
-      time: "4 hours ago",
+      timestamp: "4 hours ago",
       source: "Reuters",
-      url: "#",
     },
     {
-      id: 3,
-      title: "Major Exchange Reports Security Breach",
-      sentiment: -0.7,
-      impact: "high",
-      time: "6 hours ago",
+      title: "Major Exchange Reports Security Upgrade",
+      summary: "Enhanced security measures implemented across trading platforms",
+      sentiment: 45,
+      impact: "low",
+      timestamp: "6 hours ago",
       source: "CryptoNews",
-      url: "#",
     },
     {
-      id: 4,
-      title: "Institutional Adoption Continues to Grow",
-      sentiment: 0.5,
-      impact: "medium",
-      time: "8 hours ago",
+      title: "Regulatory Clarity Expected Soon",
+      summary: "SEC chairman indicates clearer crypto guidelines coming",
+      sentiment: 68,
+      impact: "high",
+      timestamp: "8 hours ago",
       source: "Bloomberg",
-      url: "#",
     },
   ]
 
   const newsData = data || mockNews
 
-  const getSentimentColor = (sentiment: number) => {
-    if (sentiment > 0.3) return "text-green-600"
-    if (sentiment < -0.3) return "text-red-600"
-    return "text-yellow-600"
-  }
-
   const getSentimentIcon = (sentiment: number) => {
-    if (sentiment > 0.3) return <TrendingUpIcon className="h-4 w-4" />
-    if (sentiment < -0.3) return <TrendingDownIcon className="h-4 w-4" />
+    if (sentiment > 60) return <TrendingUpIcon className="h-4 w-4 text-green-500" />
+    if (sentiment < 40) return <TrendingDownIcon className="h-4 w-4 text-red-500" />
     return <div className="h-4 w-4 rounded-full bg-yellow-500" />
   }
 
-  const getImpactBadge = (impact: string) => {
-    const variants = {
-      high: "destructive",
-      medium: "secondary",
-      low: "outline",
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
-    return variants[impact as keyof typeof variants] || "outline"
   }
 
   if (loading) {
@@ -81,8 +85,8 @@ export default function NewsOverlay({ data, loading, expanded = false }: NewsOve
         {[...Array(expanded ? 6 : 3)].map((_, i) => (
           <div key={i} className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-full" />
             <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-3 w-1/4" />
           </div>
         ))}
       </div>
@@ -91,22 +95,30 @@ export default function NewsOverlay({ data, loading, expanded = false }: NewsOve
 
   return (
     <div className="space-y-4">
-      {newsData.slice(0, expanded ? 10 : 4).map((news: any) => (
-        <Card key={news.id} className="hover:shadow-md transition-shadow">
+      {newsData.slice(0, expanded ? 10 : 4).map((item, index) => (
+        <Card key={index} className="hover:shadow-md transition-shadow">
           <CardContent className="pt-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={getSentimentColor(news.sentiment)}>{getSentimentIcon(news.sentiment)}</span>
-                  <Badge variant={getImpactBadge(news.impact) as any}>{news.impact} impact</Badge>
-                  <span className="text-xs text-muted-foreground">{news.time}</span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  {getSentimentIcon(item.sentiment)}
+                  <h4 className="font-semibold text-sm leading-tight">{item.title}</h4>
                 </div>
-
-                <h4 className="font-semibold text-sm mb-2 line-clamp-2">{news.title}</h4>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{news.source}</span>
-                  <ExternalLinkIcon className="h-3 w-3 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">{item.summary}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{item.source}</span>
+                  <span>•</span>
+                  <span>{item.timestamp}</span>
+                  {item.url && <ExternalLinkIcon className="h-3 w-3" />}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="outline" className={getImpactColor(item.impact)}>
+                  {item.impact.toUpperCase()}
+                </Badge>
+                <div className="text-xs font-medium">
+                  {item.sentiment > 60 ? "+" : item.sentiment < 40 ? "-" : ""}
+                  {item.sentiment}%
                 </div>
               </div>
             </div>
