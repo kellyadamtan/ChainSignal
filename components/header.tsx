@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Search, Menu, X, LogIn, User, Settings, LogOut, Building, TrendingUp } from "lucide-react"
+import { BarChart3, Search, Menu, X, LogIn, User, Settings, LogOut, Building, TrendingUp, Wallet } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ export function Header() {
   const navigation = [
     { name: "Dashboard", href: "/", icon: BarChart3 },
     { name: "Market", href: "/market", icon: TrendingUp },
+    { name: "WalletDNA™", href: "/walletdna", icon: Wallet },
     { name: "Enterprise", href: "/enterprise/dashboard", icon: Building },
     { name: "Pricing", href: "/pricing", icon: BarChart3 },
   ]
