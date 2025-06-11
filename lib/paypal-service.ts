@@ -25,10 +25,10 @@ export class PayPalService {
     this.config = {
       clientId:
         process.env.PAYPAL_CLIENT_ID ||
-        "ATAcTvH9uV-pDtsKIcAodp8Aw0jy8F03ZkFagzfb6-bAY3fOn7KJ7cKJK8jtmk92JNDBi7Cd7q058ruK",
+        "AfuBAuvvVCzJ0m3bcU6edU6nLHrhrDYPOjx9lDYdtEvNRGJsxdgOyc1VEnU9oYti6a228S9jyAdZusQM",
       clientSecret:
         process.env.PAYPAL_CLIENT_SECRET ||
-        "EN_xx3VqIgm_nxWznlhHs8OqMQkXFybe48eIoZup7cZ7qldJbG2g3IRreuRGNXi9IO16UaS9Vlmi3svu",
+        "EFIvVom7eRuffi82h_-j1edZZlo6QQmO4LVXOglK0aVfZK-O5yy7sdvi_mUvm3Nz1AyUPIm3im2Vof_c",
       environment: (process.env.PAYPAL_ENVIRONMENT as "sandbox" | "live") || "sandbox",
       webhookId: process.env.PAYPAL_WEBHOOK_ID,
     }
