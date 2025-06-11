@@ -198,7 +198,7 @@ export default function OnChainMetrics({ data, loading }: OnChainMetricsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ActivityIcon className="h-5 w-5" />
-            Large Transactions (>1000 BTC)
+            Large Transactions ({">"}1000 BTC)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -218,8 +218,8 @@ export default function OnChainMetrics({ data, loading }: OnChainMetricsProps) {
                   <div>
                     <div className="font-semibold">{tx.amount.toLocaleString()} BTC</div>
                     <div className="text-sm text-muted-foreground">
-                      {tx.type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                      {tx.exchange !== "Unknown" && ` • ${tx.exchange}`}
+                      {tx.type ? tx.type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()) : "Unknown"}
+                      {tx.exchange && tx.exchange !== "Unknown" && ` • ${tx.exchange}`}
                     </div>
                   </div>
                 </div>
