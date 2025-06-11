@@ -68,8 +68,8 @@ export default function EnterpriseDashboard() {
   if (session?.user?.subscriptionTier !== "enterprise") {
     return (
       <EnterprisePaywall
-        title="Enterprise Dashboard"
-        description="Access advanced blockchain analytics and compliance tools designed for institutional clients"
+        title="Enterprise Analytics Suite"
+        description="Access advanced blockchain analytics, compliance tools, dark pool detection, and institutional-grade features designed for enterprise clients"
         feature="enterpriseAnalytics"
       />
     )

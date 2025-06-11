@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Brain, Shield, TrendingUp, AlertTriangle, Network, Eye, Users, Lock, Target } from "lucide-react"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts"
 import { useToast } from "@/hooks/use-toast"
+import { useSession } from "next-auth/react"
+import { EnterprisePaywall } from "@/components/enterprise-paywall"
 
 interface ClusterAnalysis {
   clusters: any
@@ -28,11 +30,11 @@ export function EnterpriseDashboard() {
   const [complianceAlerts, setComplianceAlerts] = useState([])
   const [darkPoolEvents, setDarkPoolEvents] = useState([])
   const [arbitrageOpportunities, setArbitrageOpportunities] = useState([])
+  const [isOnEnterpriseTier, setIsOnEnterpriseTier] = useState(false)
 
-  useEffect(() => {
-    fetchEnterpriseData()
-  }, [])
+  const { data: session } = useSession()
 
+  // Define fetchEnterpriseData before using it in useEffect
   const fetchEnterpriseData = async () => {
     try {
       // Fetch clustering data
@@ -65,6 +67,32 @@ export function EnterpriseDashboard() {
     } catch (error) {
       console.error("Failed to fetch enterprise data:", error)
     }
+  }
+
+  useEffect(() => {
+    if (session?.user?.subscriptionTier === "enterprise") {
+      setIsOnEnterpriseTier(true)
+    } else {
+      setIsOnEnterpriseTier(false)
+    }
+  }, [session])
+
+  useEffect(() => {
+    // Only fetch data if user is on enterprise tier
+    if (isOnEnterpriseTier) {
+      fetchEnterpriseData()
+    }
+  }, [isOnEnterpriseTier])
+
+  // Show paywall if user is not on enterprise tier
+  if (!isOnEnterpriseTier) {
+    return (
+      <EnterprisePaywall
+        title="Enterprise Analytics Suite"
+        description="Access advanced blockchain analytics, compliance tools, dark pool detection, and institutional-grade features designed for enterprise clients"
+        feature="enterpriseAnalytics"
+      />
+    )
   }
 
   const runAdvancedClustering = async () => {
@@ -299,9 +327,9 @@ export function EnterpriseDashboard() {
                   <h4 className="font-semibold mb-4">Active Compliance Rules</h4>
                   <div className="space-y-3">
                     {[
-                      { name: "Large Transaction Alert", threshold: "> $10,000", status: "active", triggered: 23 },
+                      { name: "Large Transaction Alert", threshold: "{'>'}$10,000", status: "active", triggered: 23 },
                       { name: "Mixer Interaction", threshold: "Any amount", status: "active", triggered: 7 },
-                      { name: "Rapid Succession", threshold: "> 5 tx/hour", status: "active", triggered: 12 },
+                      { name: "Rapid Succession", threshold: "{'>'}5 tx/hour", status: "active", triggered: 12 },
                       { name: "Sanctioned Address", threshold: "Any interaction", status: "active", triggered: 0 },
                     ].map((rule, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">

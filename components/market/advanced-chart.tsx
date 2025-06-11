@@ -1,285 +1,251 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Line } from "react-chartjs-2"
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts"
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  TimeScale,
-} from "chart.js"
-import "chartjs-adapter-date-fns"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
+  BarChart3,
+  TrendingUp,
+  Activity,
+  Newspaper,
+  BarChart,
+  Layers,
+  Wallet,
+  Building,
+  AlertCircle,
+} from "lucide-react"
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, TimeScale)
+// Mock data
+const priceData = [
+  { date: "2023-01-01", price: 16500, volume: 12000, news: 0 },
+  { date: "2023-02-01", price: 19800, volume: 18000, news: 1 },
+  { date: "2023-03-01", price: 22300, volume: 15000, news: 0 },
+  { date: "2023-04-01", price: 28100, volume: 22000, news: 1 },
+  { date: "2023-05-01", price: 27400, volume: 19000, news: 0 },
+  { date: "2023-06-01", price: 30100, volume: 25000, news: 1 },
+  { date: "2023-07-01", price: 29200, volume: 20000, news: 0 },
+  { date: "2023-08-01", price: 26000, volume: 17000, news: 0 },
+  { date: "2023-09-01", price: 27800, volume: 19000, news: 1 },
+  { date: "2023-10-01", price: 34500, volume: 28000, news: 1 },
+  { date: "2023-11-01", price: 37800, volume: 32000, news: 0 },
+  { date: "2023-12-01", price: 42000, volume: 38000, news: 1 },
+  { date: "2024-01-01", price: 45000, volume: 42000, news: 0 },
+  { date: "2024-02-01", price: 51000, volume: 48000, news: 1 },
+  { date: "2024-03-01", price: 68000, volume: 65000, news: 1 },
+  { date: "2024-04-01", price: 64000, volume: 55000, news: 0 },
+  { date: "2024-05-01", price: 70000, volume: 62000, news: 1 },
+]
 
-interface AdvancedChartProps {
-  data: any
-  timeframe: string
-  overlays: {
-    showNews: boolean
-    showWhaleTransactions: boolean
-    showLiquidityHeatmap: boolean
-    showPatternRecognition: boolean
-  }
-  loading: boolean
-}
+export default function AdvancedChart() {
+  const [overlays, setOverlays] = useState({
+    news: true,
+    whales: true,
+    liquidity: false,
+    patterns: true,
+    institutional: false,
+  })
 
-export default function AdvancedChart({ data, timeframe, overlays, loading }: AdvancedChartProps) {
-  const chartRef = useRef<any>(null)
-  const [chartData, setChartData] = useState<any>(null)
-  const [annotations, setAnnotations] = useState<any[]>([])
-
-  useEffect(() => {
-    if (!data?.historicalData?.prices) return
-
-    const prices = data.historicalData.prices.map((price: [number, number]) => ({
-      x: new Date(price[0]),
-      y: price[1],
+  const toggleOverlay = (key: keyof typeof overlays) => {
+    setOverlays((prev) => ({
+      ...prev,
+      [key]: !prev[key],
     }))
-
-    // Generate whale transaction markers
-    const whaleTransactions = overlays.showWhaleTransactions ? generateWhaleTransactions(prices) : []
-
-    // Generate news event markers
-    const newsEvents = overlays.showNews ? generateNewsEvents(prices) : []
-
-    // Generate AI pattern recognition
-    const aiPatterns = overlays.showPatternRecognition ? generateAIPatterns(prices) : []
-
-    const datasets = [
-      {
-        label: "Bitcoin Price",
-        data: prices,
-        borderColor: "rgb(249, 115, 22)",
-        backgroundColor: "rgba(249, 115, 22, 0.1)",
-        tension: 0.4,
-        pointRadius: 0,
-        fill: true,
-      },
-    ]
-
-    // Add liquidity heatmap as background
-    if (overlays.showLiquidityHeatmap) {
-      datasets.push({
-        label: "Support Zones",
-        data: generateLiquidityZones(prices),
-        borderColor: "rgba(34, 197, 94, 0.3)",
-        backgroundColor: "rgba(34, 197, 94, 0.1)",
-        tension: 0,
-        pointRadius: 0,
-        fill: false,
-      } as any)
-    }
-
-    setChartData({ datasets })
-    setAnnotations([...whaleTransactions, ...newsEvents, ...aiPatterns])
-  }, [data, overlays])
-
-  const generateWhaleTransactions = (prices: any[]) => {
-    const transactions = []
-    for (let i = 0; i < prices.length; i += Math.floor(prices.length / 10)) {
-      if (Math.random() > 0.7) {
-        // 30% chance of whale transaction
-        transactions.push({
-          type: "point",
-          xValue: prices[i].x,
-          yValue: prices[i].y,
-          backgroundColor: "rgba(147, 51, 234, 0.8)",
-          borderColor: "rgb(147, 51, 234)",
-          borderWidth: 2,
-          radius: 8,
-          label: {
-            content: "🐋 Large Transfer",
-            enabled: true,
-            position: "top",
-          },
-        })
-      }
-    }
-    return transactions
-  }
-
-  const generateNewsEvents = (prices: any[]) => {
-    const events = []
-    const newsItems = [
-      { text: "📰 ETF Approval", sentiment: 1 },
-      { text: "📰 Regulatory Update", sentiment: -1 },
-      { text: "📰 Institutional Adoption", sentiment: 1 },
-      { text: "📰 Market Analysis", sentiment: 0 },
-    ]
-
-    for (let i = 0; i < prices.length; i += Math.floor(prices.length / 8)) {
-      if (Math.random() > 0.6) {
-        // 40% chance of news event
-        const news = newsItems[Math.floor(Math.random() * newsItems.length)]
-        events.push({
-          type: "line",
-          xMin: prices[i].x,
-          xMax: prices[i].x,
-          borderColor:
-            news.sentiment > 0 ? "rgb(34, 197, 94)" : news.sentiment < 0 ? "rgb(239, 68, 68)" : "rgb(156, 163, 175)",
-          borderWidth: 2,
-          label: {
-            content: news.text,
-            enabled: true,
-            position: "start",
-          },
-        })
-      }
-    }
-    return events
-  }
-
-  const generateAIPatterns = (prices: any[]) => {
-    const patterns = []
-    const patternTypes = [
-      { name: "🔺 Bull Flag", color: "rgb(34, 197, 94)" },
-      { name: "🔻 Bear Flag", color: "rgb(239, 68, 68)" },
-      { name: "📐 Triangle", color: "rgb(59, 130, 246)" },
-      { name: "🎯 Support", color: "rgb(168, 85, 247)" },
-    ]
-
-    for (let i = 0; i < prices.length; i += Math.floor(prices.length / 6)) {
-      if (Math.random() > 0.8) {
-        // 20% chance of AI pattern
-        const pattern = patternTypes[Math.floor(Math.random() * patternTypes.length)]
-        patterns.push({
-          type: "box",
-          xMin: prices[i].x,
-          xMax: prices[Math.min(i + 20, prices.length - 1)].x,
-          yMin: prices[i].y * 0.98,
-          yMax: prices[i].y * 1.02,
-          backgroundColor: pattern.color + "20",
-          borderColor: pattern.color,
-          borderWidth: 1,
-          label: {
-            content: pattern.name,
-            enabled: true,
-            position: "center",
-          },
-        })
-      }
-    }
-    return patterns
-  }
-
-  const generateLiquidityZones = (prices: any[]) => {
-    return prices.map((price, index) => ({
-      x: price.x,
-      y: price.y * (0.95 + Math.random() * 0.1), // Simulate support/resistance zones
-    }))
-  }
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: "top" as const,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            const price = new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(context.parsed.y)
-            return `Price: ${price}`
-          },
-          title: (context: any) => {
-            const date = new Date(context[0].parsed.x)
-            return date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          },
-        },
-      },
-      annotation: {
-        annotations: annotations,
-      },
-    },
-    scales: {
-      x: {
-        type: "time" as const,
-        time: {
-          unit: timeframe === "1" ? "hour" : "day",
-        },
-        grid: { display: false },
-      },
-      y: {
-        position: "right" as const,
-        ticks: {
-          callback: (value: any) => {
-            return new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-              notation: "compact",
-            }).format(value)
-          },
-        },
-      },
-    },
-    interaction: {
-      intersect: false,
-      mode: "index" as const,
-    },
-  }
-
-  if (loading) {
-    return <Skeleton className="h-80 w-full" />
-  }
-
-  if (!chartData) {
-    return <div className="h-80 flex items-center justify-center text-muted-foreground">No chart data available</div>
   }
 
   return (
-    <div className="space-y-4">
-      {/* Active Overlays */}
-      <div className="flex flex-wrap gap-2">
-        {overlays.showNews && <Badge variant="secondary">📰 News Events</Badge>}
-        {overlays.showWhaleTransactions && <Badge variant="secondary">🐋 Whale Moves</Badge>}
-        {overlays.showLiquidityHeatmap && <Badge variant="secondary">💧 Liquidity Zones</Badge>}
-        {overlays.showPatternRecognition && <Badge variant="secondary">🤖 AI Patterns</Badge>}
-      </div>
+    <Card className="col-span-3">
+      <CardHeader>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <CardTitle>Bitcoin Price Chart</CardTitle>
+            <CardDescription>Advanced market analysis with on-chain metrics</CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch id="news-overlay" checked={overlays.news} onCheckedChange={() => toggleOverlay("news")} />
+              <Label htmlFor="news-overlay">News Sentiment</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="whales-overlay" checked={overlays.whales} onCheckedChange={() => toggleOverlay("whales")} />
+              <Label htmlFor="whales-overlay">
+                <span>Whale Transactions ({">"}1000 BTC)</span>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="liquidity-overlay"
+                checked={overlays.liquidity}
+                onCheckedChange={() => toggleOverlay("liquidity")}
+              />
+              <Label htmlFor="liquidity-overlay">Liquidity Heatmap</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="patterns-overlay"
+                checked={overlays.patterns}
+                onCheckedChange={() => toggleOverlay("patterns")}
+              />
+              <Label htmlFor="patterns-overlay">AI Pattern Detection</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="institutional-overlay"
+                checked={overlays.institutional}
+                onCheckedChange={() => toggleOverlay("institutional")}
+              />
+              <Label htmlFor="institutional-overlay">Institutional Flows</Label>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="chart" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="chart" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Chart</span>
+            </TabsTrigger>
+            <TabsTrigger value="sentiment" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              <span>Sentiment</span>
+            </TabsTrigger>
+            <TabsTrigger value="onchain" className="flex items-center gap-2">
+              <Layers className="h-4 w-4" />
+              <span>On-Chain</span>
+            </TabsTrigger>
+            <TabsTrigger value="institutional" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              <span>Institutional</span>
+            </TabsTrigger>
+            <TabsTrigger value="news" className="flex items-center gap-2">
+              <Newspaper className="h-4 w-4" />
+              <span>News</span>
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Chart */}
-      <div className="h-80">
-        <Line ref={chartRef} data={chartData} options={chartOptions} />
-      </div>
+          <TabsContent value="chart" className="space-y-4">
+            <div className="h-[400px]">
+              <ChartContainer
+                config={{
+                  price: {
+                    label: "BTC Price",
+                    color: "hsl(var(--chart-1))",
+                  },
+                  volume: {
+                    label: "Volume",
+                    color: "hsl(var(--chart-2))",
+                  },
+                }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={priceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="price" stroke="var(--color-price)" activeDot={{ r: 8 }} />
+                    <Line type="monotone" dataKey="volume" stroke="var(--color-volume)" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
 
-      {/* Chart Legend */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-          <span>Whale Transactions ({">"}1000 BTC)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span>Bullish News Events</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-          <span>Bearish News Events</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-          <span>AI Pattern Recognition</span>
-        </div>
-      </div>
-    </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="py-2">
+                  <CardTitle className="text-sm font-medium">Pattern Detection</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <div className="flex items-center gap-2 text-green-500">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="text-sm">Bull Flag Detected (4H)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-amber-500 mt-1">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">Resistance at $71,200</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="py-2">
+                  <CardTitle className="text-sm font-medium">Whale Activity</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-purple-500" />
+                    <span className="text-sm">3 large transactions in 24h</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Total volume: 5,280 BTC</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="py-2">
+                  <CardTitle className="text-sm font-medium">Market Sentiment</CardTitle>
+                </CardHeader>
+                <CardContent className="py-2">
+                  <div className="flex items-center gap-2">
+                    <BarChart className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">Greed (76/100)</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">Up 8 points from yesterday</div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="sentiment">
+            <div className="h-[500px] flex items-center justify-center border rounded-md">
+              <div className="text-center">
+                <Activity className="h-12 w-12 mx-auto text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-medium">Sentiment Analysis</h3>
+                <p className="text-sm text-muted-foreground mt-2">Fear & Greed Index and social sentiment metrics</p>
+                <Button className="mt-4">Load Sentiment Data</Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="onchain">
+            <div className="h-[500px] flex items-center justify-center border rounded-md">
+              <div className="text-center">
+                <Layers className="h-12 w-12 mx-auto text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-medium">On-Chain Metrics</h3>
+                <p className="text-sm text-muted-foreground mt-2">Network health and blockchain analytics</p>
+                <Button className="mt-4">Load On-Chain Data</Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="institutional">
+            <div className="h-[500px] flex items-center justify-center border rounded-md">
+              <div className="text-center">
+                <Building className="h-12 w-12 mx-auto text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-medium">Institutional Activity</h3>
+                <p className="text-sm text-muted-foreground mt-2">ETF flows, CME futures, and corporate holdings</p>
+                <Button className="mt-4">Load Institutional Data</Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="news">
+            <div className="h-[500px] flex items-center justify-center border rounded-md">
+              <div className="text-center">
+                <Newspaper className="h-12 w-12 mx-auto text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-medium">News & Events</h3>
+                <p className="text-sm text-muted-foreground mt-2">Market-moving news with sentiment analysis</p>
+                <Button className="mt-4">Load News Feed</Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   )
 }
