@@ -265,7 +265,7 @@ export default function AdvancedChart({ data, timeframe, overlays, loading }: Ad
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-          <span>Whale Transactions (>1000 BTC)</span>
+          <span>Whale Transactions ({">"}1000 BTC)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-green-500 rounded-full"></div>

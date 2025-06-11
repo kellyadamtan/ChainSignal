@@ -147,7 +147,7 @@ export default function WalletIntelligencePanel() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Whale Wallets</CardTitle>
-            <CardDescription>Large holders (>1000 BTC)</CardDescription>
+            <CardDescription>Large holders ({">"}1000 BTC)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">15</div>
