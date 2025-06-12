@@ -78,7 +78,10 @@ export function Footer() {
             >
               TGI Technologies
             </Link>
-            . All rights reserved.
+            . All rights reserved. |{" "}
+            <Link href="/privacyterm" className="font-medium underline underline-offset-4 hover:text-primary">
+              Privacy & Terms
+            </Link>
           </p>
 
           {/* Language Selector */}
