@@ -30,7 +30,7 @@ const SentimentGauge = dynamic(() => import("@/components/market/sentiment-gauge
   loading: () => <Skeleton className="h-32 w-full" />,
 })
 
-const NewsOverlay = dynamic(() => import("@/components/market/news-overlay"), {
+const BitcoinNewsFeed = dynamic(() => import("@/components/market/bitcoin-news-feed"), {
   ssr: false,
   loading: () => <Skeleton className="h-40 w-full" />,
 })
@@ -74,11 +74,10 @@ export default function MarketPage() {
       setError(null)
 
       // Fetch multiple data sources in parallel
-      const [marketResponse, fearGreedResponse, onChainResponse, newsResponse] = await Promise.allSettled([
+      const [marketResponse, fearGreedResponse, onChainResponse] = await Promise.allSettled([
         fetch(`/api/market/bitcoin?days=${timeframe}`),
         fetch("/api/market/fear-greed"),
         fetch("/api/market/onchain"),
-        fetch("/api/market/news"),
       ])
 
       const result: MarketData = { marketData: null, historicalData: null, globalData: null }
@@ -101,12 +100,6 @@ export default function MarketPage() {
       if (onChainResponse.status === "fulfilled" && onChainResponse.value.ok) {
         const onChainData = await onChainResponse.value.json()
         result.onChainData = onChainData
-      }
-
-      // Process news data
-      if (newsResponse.status === "fulfilled" && newsResponse.value.ok) {
-        const newsData = await newsResponse.value.json()
-        result.newsData = newsData
       }
 
       setData(result)
@@ -170,7 +163,7 @@ export default function MarketPage() {
             Advanced Bitcoin Market
           </h1>
           <p className="text-muted-foreground mt-1">
-            Comprehensive trading dashboard with on-chain metrics, sentiment analysis, and AI insights
+            Comprehensive trading dashboard with on-chain metrics, sentiment analysis, and real-time news
           </p>
         </div>
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
@@ -442,7 +435,7 @@ export default function MarketPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <NewsOverlay data={data?.newsData} loading={loading} />
+                <BitcoinNewsFeed />
               </CardContent>
             </Card>
           </div>
@@ -459,7 +452,7 @@ export default function MarketPage() {
         <TabsContent value="news">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <NewsOverlay data={data?.newsData} loading={loading} expanded />
+              <BitcoinNewsFeed expanded />
             </div>
             <div>
               <Card>
