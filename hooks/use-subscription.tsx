@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useSession } from "next-auth/react"
 import { type User, SubscriptionService, type SubscriptionPlan } from "@/lib/subscription-service"
 
 interface SubscriptionContextType {
@@ -18,31 +19,40 @@ interface SubscriptionProviderProps {
 }
 
 export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
+  const { data: session, status } = useSession()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadUser()
-  }, [])
+    if (status === "loading") {
+      setLoading(true)
+      return
+    }
 
-  const loadUser = async () => {
-    try {
-      // In a real app, this would fetch from your authentication system
-      // For now, we'll use a mock user
-      const mockUser: User = {
-        id: "1",
-        email: "user@example.com",
+    if (status === "authenticated" && session?.user) {
+      // Create user object from session data
+      const sessionUser: User = {
+        id: session.user.id || "1",
+        email: session.user.email || "admin@chainsignal.com",
+        subscriptionTier: (session.user as any).subscriptionTier || "enterprise",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
+      }
+      setUser(sessionUser)
+      setLoading(false)
+    } else if (status === "unauthenticated") {
+      // For unauthenticated users, create a free tier user
+      const freeUser: User = {
+        id: "guest",
+        email: "guest@example.com",
         subscriptionTier: "free",
         subscriptionStatus: "active",
         createdAt: new Date(),
       }
-      setUser(mockUser)
-    } catch (error) {
-      console.error("Failed to load user:", error)
-    } finally {
+      setUser(freeUser)
       setLoading(false)
     }
-  }
+  }, [session, status])
 
   const hasFeatureAccess = (feature: keyof SubscriptionPlan["features"]): boolean => {
     if (!user) return false
@@ -50,7 +60,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   }
 
   const refreshUser = async () => {
-    await loadUser()
+    // Refresh would typically refetch user data from your backend
+    // For now, we'll just reload from session
+    if (session?.user) {
+      const sessionUser: User = {
+        id: session.user.id || "1",
+        email: session.user.email || "admin@chainsignal.com",
+        subscriptionTier: (session.user as any).subscriptionTier || "enterprise",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
+      }
+      setUser(sessionUser)
+    }
   }
 
   const upgradeUrl = (tier: "pro" | "enterprise"): string => {

@@ -1,19 +1,20 @@
 import type React from "react"
 import type { Metadata } from "next"
-import "./globals.css"
 import { Inter } from "next/font/google"
-import { NextAuthProvider } from "@/components/providers/session-provider"
-import { ThemeProvider } from "@/components/theme-provider"
+import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { SessionProvider } from "next-auth/react"
+import { SubscriptionProvider } from "@/hooks/use-subscription"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ChainSignal - Bitcoin On-Chain Analytics",
-  description: "Production-ready Bitcoin analytics platform with real-time data visualization",
-  generator: "v0.dev",
+  title: "ChainSignal - Bitcoin Analytics Platform",
+  description: "Advanced Bitcoin analytics, market intelligence, and blockchain insights",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -23,15 +24,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} flex min-h-screen flex-col`}>
-        <NextAuthProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header />
-            <div className="flex-1">{children}</div>
-            <Footer />
-            <Toaster />
-          </ThemeProvider>
-        </NextAuthProvider>
+      <body className={inter.className}>
+        <SessionProvider>
+          <SubscriptionProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              <div className="min-h-screen bg-background">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster />
+            </ThemeProvider>
+          </SubscriptionProvider>
+        </SessionProvider>
       </body>
     </html>
   )
