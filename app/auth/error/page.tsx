@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { Suspense } from "react"
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams()
-  const error = searchParams.get("error")
+  const error = searchParams?.get("error") || "Unknown"
 
   const errorMessages: Record<string, { title: string; description: string }> = {
     Configuration: {
@@ -63,9 +64,13 @@ export default function AuthError() {
       title: "Authentication Error",
       description: "An error occurred during authentication. Please try again.",
     },
+    Unknown: {
+      title: "Unknown Error",
+      description: "An unknown error occurred. Please try again or contact support.",
+    },
   }
 
-  const errorInfo = error ? errorMessages[error] || errorMessages.Default : errorMessages.Default
+  const errorInfo = errorMessages[error] || errorMessages.Unknown
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -99,5 +104,19 @@ export default function AuthError() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function AuthError() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">Loading...</div>
+        </div>
+      }
+    >
+      <AuthErrorContent />
+    </Suspense>
   )
 }
