@@ -23,11 +23,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* CookieYes Banner Script */}
+        {/* CookieYes Banner Script - Load with proper error handling */}
         <Script
           id="cookieyes"
           src="https://cdn-cookieyes.com/client_data/691a2f876ef768929cb0d286/script.js"
           strategy="afterInteractive"
+          onError={(e) => {
+            console.error("CookieYes script failed to load:", e)
+          }}
         />
       </head>
       <body className={inter.className}>
