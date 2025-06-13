@@ -5,7 +5,7 @@ import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ClientProviders } from "@/components/providers/client-providers"
-import Script from "next/script"
+import { ScriptProvider } from "@/components/providers/script-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,19 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* CookieYes Banner Script - Load with proper error handling */}
-        <Script
-          id="cookieyes"
-          src="https://cdn-cookieyes.com/client_data/691a2f876ef768929cb0d286/script.js"
-          strategy="afterInteractive"
-          onError={(e) => {
-            console.error("CookieYes script failed to load:", e)
-          }}
-        />
-      </head>
+      <head>{/* Scripts are now handled by the ScriptProvider */}</head>
       <body className={inter.className}>
         <ClientProviders>
+          <ScriptProvider />
           <div className="min-h-screen bg-background">
             <Header />
             <main className="flex-1">{children}</main>
