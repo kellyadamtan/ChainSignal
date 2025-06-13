@@ -131,12 +131,6 @@ importers:
       fs:
         specifier: latest
         version: 0.0.1-security
-      graphql:
-        specifier: latest
-        version: 16.11.0
-      graphql-request:
-        specifier: latest
-        version: 7.2.0(graphql@16.11.0)
       gray-matter:
         specifier: latest
         version: 4.0.3
@@ -261,11 +255,6 @@ packages:
 
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
-
-  '@graphql-typed-document-node/core@3.2.0':
-    resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
-    peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
   '@hookform/resolvers@3.9.1':
     resolution: {integrity: sha512-ud2HqmGBM0P0IABqoskKWI6PEf6ZDDBZkFqe2Vnl+mTHCEHzr3ISjjZyCwTjC/qpL25JC9aIDkloQejvMeq0ug==}
@@ -1455,15 +1444,6 @@ packages:
     resolution: {integrity: sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==}
     hasBin: true
 
-  graphql-request@7.2.0:
-    resolution: {integrity: sha512-0GR7eQHBFYz372u9lxS16cOtEekFlZYB2qOyq8wDvzRmdRSJ0mgUVX1tzNcIzk3G+4NY+mGtSz411wZdeDF/+A==}
-    peerDependencies:
-      graphql: 14 - 16
-
-  graphql@16.11.0:
-    resolution: {integrity: sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==}
-    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
-
   gray-matter@4.0.3:
     resolution: {integrity: sha512-5v6yZd4JK3eMI3FqqCouswVqwugaA9r4dNZB1wwcmrD02QkV5H0y7XBQW8QwQqEaZY1pM9aqORSORhJRdNK44Q==}
     engines: {node: '>=6.0'}
@@ -2174,10 +2154,6 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
 
   '@floating-ui/utils@0.2.9': {}
-
-  '@graphql-typed-document-node/core@3.2.0(graphql@16.11.0)':
-    dependencies:
-      graphql: 16.11.0
 
   '@hookform/resolvers@3.9.1(react-hook-form@7.57.0(react@19.0.0))':
     dependencies:
@@ -3348,13 +3324,6 @@ snapshots:
       minipass: 7.1.2
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
-
-  graphql-request@7.2.0(graphql@16.11.0):
-    dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.11.0)
-      graphql: 16.11.0
-
-  graphql@16.11.0: {}
 
   gray-matter@4.0.3:
     dependencies:

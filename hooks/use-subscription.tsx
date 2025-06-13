@@ -1,92 +1,104 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useSession } from "next-auth/react"
+import { type User, SubscriptionService, type SubscriptionPlan } from "@/lib/subscription-service"
 
-// Define subscription tiers
-export type SubscriptionTier = "free" | "pro" | "enterprise"
-
-// Define subscription context type
 interface SubscriptionContextType {
-  tier: SubscriptionTier
-  isLoading: boolean
-  hasAccess: (requiredTier: SubscriptionTier) => boolean
+  user: User | null
+  loading: boolean
+  hasFeatureAccess: (feature: keyof SubscriptionPlan["features"]) => boolean
+  refreshUser: () => Promise<void>
+  upgradeUrl: (tier: "pro" | "enterprise") => string
 }
 
-// Create context with default values
-const SubscriptionContext = createContext<SubscriptionContextType>({
-  tier: "free",
-  isLoading: true,
-  hasAccess: () => false,
-})
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
-// Custom hook to use subscription context
-export const useSubscription = () => useContext(SubscriptionContext)
-
-// Helper function to check feature access
-export const useFeatureAccess = (requiredTier: SubscriptionTier) => {
-  const { hasAccess, isLoading } = useSubscription()
-  return { hasAccess: hasAccess(requiredTier), isLoading }
+interface SubscriptionProviderProps {
+  children: ReactNode
 }
 
-// Provider component
-export const SubscriptionProvider = ({ children }: { children: React.ReactNode }) => {
+export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const { data: session, status } = useSession()
-  const [tier, setTier] = useState<SubscriptionTier>("free")
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Determine subscription tier based on session
   useEffect(() => {
-    try {
-      if (status === "loading") {
-        setIsLoading(true)
-        return
+    if (status === "loading") {
+      setLoading(true)
+      return
+    }
+
+    if (status === "authenticated" && session?.user) {
+      // Create user object from session data
+      const sessionUser: User = {
+        id: session.user.id || "1",
+        email: session.user.email || "admin@chainsignal.com",
+        subscriptionTier: (session.user as any).subscriptionTier || "enterprise",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
       }
-
-      setIsLoading(false)
-
-      // Default to free tier if not authenticated
-      if (status !== "authenticated" || !session) {
-        setTier("free")
-        return
+      setUser(sessionUser)
+      setLoading(false)
+    } else if (status === "unauthenticated") {
+      // For unauthenticated users, create a free tier user
+      const freeUser: User = {
+        id: "guest",
+        email: "guest@example.com",
+        subscriptionTier: "free",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
       }
-
-      // Check for enterprise users
-      const email = session.user?.email?.toLowerCase() || ""
-      if (email === "admin@chainsignal.com") {
-        setTier("enterprise")
-        return
-      }
-
-      // Check for pro users - this would typically come from a database
-      // For now, we'll just check for specific test emails
-      if (email.includes("pro@") || email.includes("test@")) {
-        setTier("pro")
-        return
-      }
-
-      // Default to free tier
-      setTier("free")
-    } catch (error) {
-      console.error("Error determining subscription tier:", error)
-      setTier("free")
-      setIsLoading(false)
+      setUser(freeUser)
+      setLoading(false)
     }
   }, [session, status])
 
-  // Function to check if user has access to a feature
-  const hasAccess = (requiredTier: SubscriptionTier): boolean => {
-    try {
-      if (requiredTier === "free") return true
-      if (requiredTier === "pro") return tier === "pro" || tier === "enterprise"
-      if (requiredTier === "enterprise") return tier === "enterprise"
-      return false
-    } catch (error) {
-      console.error("Error checking feature access:", error)
-      return false
+  const hasFeatureAccess = (feature: keyof SubscriptionPlan["features"]): boolean => {
+    if (!user) return false
+    return SubscriptionService.checkFeatureAccess(feature, user)
+  }
+
+  const refreshUser = async () => {
+    // Refresh would typically refetch user data from your backend
+    // For now, we'll just reload from session
+    if (session?.user) {
+      const sessionUser: User = {
+        id: session.user.id || "1",
+        email: session.user.email || "admin@chainsignal.com",
+        subscriptionTier: (session.user as any).subscriptionTier || "enterprise",
+        subscriptionStatus: "active",
+        createdAt: new Date(),
+      }
+      setUser(sessionUser)
     }
   }
 
-  return <SubscriptionContext.Provider value={{ tier, isLoading, hasAccess }}>{children}</SubscriptionContext.Provider>
+  const upgradeUrl = (tier: "pro" | "enterprise"): string => {
+    return `/pricing?plan=${tier}`
+  }
+
+  const value: SubscriptionContextType = {
+    user,
+    loading,
+    hasFeatureAccess,
+    refreshUser,
+    upgradeUrl,
+  }
+
+  return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>
+}
+
+export function useSubscription() {
+  const context = useContext(SubscriptionContext)
+  if (context === undefined) {
+    throw new Error("useSubscription must be used within a SubscriptionProvider")
+  }
+  return context
+}
+
+// Convenience hook for feature access
+export function useFeatureAccess(feature: keyof SubscriptionPlan["features"]) {
+  const { hasFeatureAccess } = useSubscription()
+  return hasFeatureAccess(feature)
 }
